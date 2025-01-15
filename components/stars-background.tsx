@@ -1,19 +1,22 @@
-'use client'
+import { useEffect, useState, useRef } from 'react'
+import type { ComponentType } from 'react'
 
-import React, { useEffect, useRef, useState } from 'react'
+interface ThreeStarsProps {
+  containerRef: React.RefObject<HTMLDivElement>
+}
 
-export function StarsBackground() {
+export default function StarsBackground() {
+  const [ThreeStars, setThreeStars] = useState<ComponentType<ThreeStarsProps> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [ThreeStars, setThreeStars] = useState<React.ComponentType | null>(null)
 
   useEffect(() => {
     import('./three-stars').then((module) => {
-      setThreeStars(() => module.default)
+      setThreeStars(() => module.default as ComponentType<ThreeStarsProps>)
     })
   }, [])
 
   return (
-    <div ref={containerRef} className="fixed inset-0 w-full h-full pointer-events-none">
+    <div ref={containerRef} className="fixed inset-0 z-[-1]">
       {ThreeStars && <ThreeStars containerRef={containerRef} />}
     </div>
   )
