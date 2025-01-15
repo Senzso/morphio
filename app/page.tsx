@@ -5,8 +5,8 @@ import Background from '../components/background'
 import Terminal from '../components/terminal'
 import EnterButton from '../components/enter-button'
 import IconRefresher from '../components/IconRefresher'
-import { StarsBackground } from '../components/stars-background'
 import StarsBackground from '../components/stars-background'
+
 
 
 export default function Home() {
