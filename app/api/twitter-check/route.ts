@@ -34,7 +34,11 @@ export async function GET(request: Request) {
       const account = data.accounts[0];
       const screenNames = account.screen_names;
       for (const [screenName, dates] of Object.entries(screenNames)) {
-        formattedData += `@${screenName}: ${dates.join(', ')}\n`;
+        if (Array.isArray(dates)) {
+          formattedData += `@${screenName}: ${dates.join(', ')}\n`;
+        } else {
+          formattedData += `@${screenName}: No dates available\n`;
+        }
       }
     } else {
       formattedData += 'No history found for this username.';
