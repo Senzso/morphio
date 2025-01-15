@@ -46,9 +46,9 @@ export default function Terminal({ onClose }: TerminalProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<any>(null)
-  const { messages, input, handleInputChange, handleSubmit, setMessages, setInput } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, setMessages } = useChat({
     api: '/api/chat',
-    initialMessages: [{ role: 'assistant', content: WELCOME_MESSAGE }]
+    initialMessages: [{ id: '1', role: 'assistant', content: WELCOME_MESSAGE }]
   })
 
   const connectPhantomWallet = useCallback(async () => {
