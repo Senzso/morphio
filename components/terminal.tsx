@@ -15,6 +15,15 @@ import { OnChainActionsPreview } from '@/components/onchain-actions-preview'
 import { VolumeBotPreview } from './volume-bot-preview'
 import { PreviewModal } from './preview-modal'
 
+declare global {
+  interface Window {
+    solana?: {
+      connect: () => Promise<void>;
+      publicKey: { toString: () => string };
+    };
+  }
+}
+
 const WELCOME_MESSAGE = `Welcome to Morpholution AI Terminal!
 Type !help for a list of available commands.`
 
@@ -54,8 +63,8 @@ export default function Terminal({ onClose }: TerminalProps) {
   const connectPhantomWallet = useCallback(async () => {
     if (typeof window.solana !== 'undefined') {
       try {
-        await window.solana.connect()
-        const publicKey = window.solana.publicKey.toString()
+        await window.solana?.connect()
+        const publicKey = window.solana?.publicKey?.toString()
         setIsWalletConnected(true)
         toast({
           title: "Wallet Connected",
@@ -86,60 +95,62 @@ export default function Terminal({ onClose }: TerminalProps) {
     
     switch (cmd) {
       case '!help':
-        return HELP_MESSAGE
+        setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: HELP_MESSAGE }])
+        return true
       case '!token_profile':
         if (args.length === 0) {
-          return 'Please provide a token address'
+          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Please provide a token address' }])
         } else {
           const profile = await getTokenProfile(args[0])
-          return profile
+          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: profile }])
         }
+        return true
       case '!token_orders':
         if (args.length < 2) {
-          return 'Please provide chainId and token address'
+          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Please provide chainId and token address' }])
         } else {
           const orders = await getTokenOrders(args[0], args[1])
-          return orders
+          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: orders }])
         }
+        return true
       case '!pair_info':
         if (args.length < 2) {
-          return 'Please provide chainId and pairId'
+          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Please provide chainId and pairId' }])
         } else {
           const pairInfo = await getPairInfo(args[0], args[1])
-          return pairInfo
+          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: pairInfo }])
         }
+        return true
       case '!twitter_check':
         if (args.length === 0) {
-          return 'Please provide a Twitter username'
+          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Please provide a Twitter username' }])
         } else {
           const twitterInfo = await checkTwitterUsername(args[0])
-          return twitterInfo.formattedData || twitterInfo.error || 'No information found for this username.'
+          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: twitterInfo.formattedData || twitterInfo.error || 'No information found for this username.' }])
         }
+        return true
       case '!gen_wallet':
         const newWallet = Keypair.generate()
         const publicKey = newWallet.publicKey.toString()
         const privateKey = Buffer.from(newWallet.secretKey).toString('hex')
-        return `New wallet generated:
+        const walletMessage = `New wallet generated:
 Public Key: ${publicKey}
 Private Key: ${privateKey}
 IMPORTANT: Save your private key securely. It will not be shown again.`
+        setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: walletMessage }])
+        return true
       case '!socials':
-        return 'Our X is: https://x.com/Morpholution'
+        setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Our X is: https://x.com/Morpholution' }])
+        return true
       default:
-        return null
+        return false
     }
-  }, [])
+  }, [setMessages])
 
   const handleSend = useCallback(async (text: string) => {
     if (text.trim()) {
-      const commandResponse = await handleCommand(text)
-      if (commandResponse) {
-        setMessages(prevMessages => [
-          ...prevMessages,
-          { role: 'user', content: text },
-          { role: 'assistant', content: commandResponse }
-        ])
-      } else {
+      const wasCommandHandled = await handleCommand(text)
+      if (!wasCommandHandled) {
         handleSubmit(undefined as any, {
           options: {
             body: {
@@ -153,7 +164,7 @@ IMPORTANT: Save your private key securely. It will not be shown again.`
       }
       setInput('') // Reset the input field after sending
     }
-  }, [handleCommand, setMessages, handleSubmit, messages, setInput])
+  }, [handleCommand, handleSubmit, messages, setInput])
 
   const startRecording = useCallback(() => {
     if (!('webkitSpeechRecognition' in window)) {
