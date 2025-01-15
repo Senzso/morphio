@@ -1,5 +1,17 @@
 import { NextResponse } from 'next/server';
 
+interface ScreenName {
+  [key: string]: string[];
+}
+
+interface TwitterAccount {
+  screen_names: ScreenName;
+}
+
+interface MemoryLolResponse {
+  accounts: TwitterAccount[];
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const username = searchParams.get('username');
@@ -15,9 +27,8 @@ export async function GET(request: Request) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data: MemoryLolResponse = await response.json();
     
-    // Format the data as a simple text
     let formattedData = `Twitter Username History for @${username}:\n\n`;
     if (data.accounts && data.accounts.length > 0) {
       const account = data.accounts[0];
