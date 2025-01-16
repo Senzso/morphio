@@ -31,21 +31,21 @@ export default function RootLayout({
         <link rel="icon" href="/icon.png" type="image/png" sizes="32x32" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         <meta name="theme-color" content="#000000" />
-        <meta name="msapplication-TileImage" content="/newicon.png" />
+        <meta name="msapplication-TileImage" content="/icon.png" />
         <meta name="msapplication-TileColor" content="#000000" />
       </head>
       <body className={inter.className}>
         {children}
         <Script id="icon-refresh">
-          {
+          {`
             const refreshFavicon = () => {
-              const link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+              const link = document.querySelector("link[rel~='icon']");
               if (link) {
-                link.href = `/icon.png?v=${new Date().getTime()}`;
+                link.href = \`/icon.png?v=\${new Date().getTime()}\`;
               }
             };
             window.onload = refreshFavicon;
-          }
+          `}
         </Script>
       </body>
     </html>
