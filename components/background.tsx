@@ -9,7 +9,7 @@ export default function Background({ fadeOut }: BackgroundProps) {
     <div className="relative w-full h-full select-none">
       <div className="relative w-full h-full">
         <Image
-          src="/ai.jpg"
+          src="/aii.gif"
           alt="Morpholution background"
           fill
           sizes="(max-width: 768px) 80vw, 80vw"
