@@ -145,9 +145,10 @@ IMPORTANT: Save your private key securely. It will not be shown again.`
         ])
         setInput('')
       } else {
+        // If it's not a command, send it to the chat API
         handleSubmit(e => {
-          e.preventDefault()
-        })
+          if (e) e.preventDefault();
+        })(text)
       }
     }
   }, [handleCommand, setMessages, handleSubmit, setInput])
@@ -179,11 +180,19 @@ IMPORTANT: Save your private key securely. It will not be shown again.`
     recognitionRef.current.onerror = (event: any) => {
       console.error('Speech recognition error', event.error)
       setIsRecording(false)
-      toast({
-        title: "Speech Recognition Error",
-        description: "An error occurred while trying to recognize speech.",
-        variant: "destructive",
-      })
+      if (event.error === 'not-allowed') {
+        toast({
+          title: "Microphone Access Denied",
+          description: "Please allow microphone access to use speech recognition.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Speech Recognition Error",
+          description: "An error occurred while trying to recognize speech.",
+          variant: "destructive",
+        })
+      }
     }
 
     recognitionRef.current.onend = () => {
