@@ -11,6 +11,18 @@ body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
   font-family: 'Arial', sans-serif;
+  cursor: none; /* Hide the default cursor */
+
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Ensure clickable elements show a pointer cursor */
+a, button, [role="button"], input[type="submit"], input[type="button"], input[type="reset"] {
+  cursor: pointer !important;
 }
 
 @keyframes scale {

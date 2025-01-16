@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Script from 'next/script'
+import { CursorEffect } from '@/components/CursorEffect'
+
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -35,6 +37,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#000000" />
       </head>
       <body className={inter.className}>
+      <CursorEffect />
         {children}
         <Script id="icon-refresh">
           {`
