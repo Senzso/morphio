@@ -14,6 +14,24 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 relative">
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-4">
+        <a 
+          href="https://x.com/Morpholution" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-white hover:text-[#e8f9ff] transition-colors"
+        >
+          [twitter]
+        </a>
+        <a 
+          href="https://pump.fun" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-white hover:text-[#e8f9ff] transition-colors"
+        >
+          [buy here]
+        </a>
+      </div>
       <IconRefresher />
       <div 
         onClick={() => !showTerminal && window.open('https://x.com/Morpholution', '_blank')}
