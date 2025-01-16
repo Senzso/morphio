@@ -15,15 +15,6 @@ import { OnChainActionsPreview } from '@/components/onchain-actions-preview'
 import { VolumeBotPreview } from './volume-bot-preview'
 import { PreviewModal } from './preview-modal'
 
-declare global {
-  interface Window {
-    solana?: {
-      connect: () => Promise<void>;
-      publicKey: { toString: () => string };
-    };
-  }
-}
-
 const WELCOME_MESSAGE = `Welcome to Morpholution AI Terminal!
 Type !help for a list of available commands.`
 
@@ -55,16 +46,16 @@ export default function Terminal({ onClose }: TerminalProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<any>(null)
-  const { messages, input, handleInputChange, handleSubmit, setMessages } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, setMessages, setInput, isLoading } = useChat({
     api: '/api/chat',
-    initialMessages: [{ id: '1', role: 'assistant', content: WELCOME_MESSAGE }]
+    initialMessages: [{ role: 'assistant', content: WELCOME_MESSAGE }]
   })
 
   const connectPhantomWallet = useCallback(async () => {
     if (typeof window.solana !== 'undefined') {
       try {
-        await window.solana?.connect()
-        const publicKey = window.solana?.publicKey?.toString()
+        await window.solana.connect()
+        const publicKey = window.solana.publicKey.toString()
         setIsWalletConnected(true)
         toast({
           title: "Wallet Connected",
@@ -95,76 +86,67 @@ export default function Terminal({ onClose }: TerminalProps) {
     
     switch (cmd) {
       case '!help':
-        setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: HELP_MESSAGE }])
-        return true
+        return HELP_MESSAGE
       case '!token_profile':
         if (args.length === 0) {
-          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Please provide a token address' }])
+          return 'Please provide a token address'
         } else {
           const profile = await getTokenProfile(args[0])
-          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: profile }])
+          return profile
         }
-        return true
       case '!token_orders':
         if (args.length < 2) {
-          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Please provide chainId and token address' }])
+          return 'Please provide chainId and token address'
         } else {
           const orders = await getTokenOrders(args[0], args[1])
-          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: orders }])
+          return orders
         }
-        return true
       case '!pair_info':
         if (args.length < 2) {
-          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Please provide chainId and pairId' }])
+          return 'Please provide chainId and pairId'
         } else {
           const pairInfo = await getPairInfo(args[0], args[1])
-          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: pairInfo }])
+          return pairInfo
         }
-        return true
       case '!twitter_check':
         if (args.length === 0) {
-          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Please provide a Twitter username' }])
+          return 'Please provide a Twitter username'
         } else {
           const twitterInfo = await checkTwitterUsername(args[0])
-          setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: twitterInfo.formattedData || twitterInfo.error || 'No information found for this username.' }])
+          return twitterInfo.formattedData || twitterInfo.error || 'No information found for this username.'
         }
-        return true
       case '!gen_wallet':
         const newWallet = Keypair.generate()
         const publicKey = newWallet.publicKey.toString()
         const privateKey = Buffer.from(newWallet.secretKey).toString('hex')
-        const walletMessage = `New wallet generated:
+        return `New wallet generated:
 Public Key: ${publicKey}
 Private Key: ${privateKey}
 IMPORTANT: Save your private key securely. It will not be shown again.`
-        setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: walletMessage }])
-        return true
       case '!socials':
-        setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Our X is: https://x.com/Morpholution' }])
-        return true
+        return 'Our X is: https://x.com/Morpholution'
       default:
-        return false
+        return null
     }
-  }, [setMessages])
+  }, [])
 
   const handleSend = useCallback(async (text: string) => {
     if (text.trim()) {
-      const wasCommandHandled = await handleCommand(text)
-      if (!wasCommandHandled) {
-        handleSubmit(undefined as any, {
-          options: {
-            body: {
-              messages: [
-                ...messages,
-                { role: 'user', content: text }
-              ]
-            }
-          }
+      const commandResponse = await handleCommand(text)
+      if (commandResponse) {
+        setMessages(prevMessages => [
+          ...prevMessages,
+          { role: 'user', content: text },
+          { role: 'assistant', content: commandResponse }
+        ])
+        setInput('')
+      } else {
+        handleSubmit(e => {
+          e.preventDefault()
         })
       }
-      setInput('') // Reset the input field after sending
     }
-  }, [handleCommand, handleSubmit, messages, setInput])
+  }, [handleCommand, setMessages, handleSubmit, setInput])
 
   const startRecording = useCallback(() => {
     if (!('webkitSpeechRecognition' in window)) {
@@ -286,6 +268,11 @@ IMPORTANT: Save your private key securely. It will not be shown again.`
           transition-all duration-500
           ${isMinimized ? 'opacity-0' : 'opacity-100'}
         `}>
+          {isLoading && (
+            <div className="mb-4 font-mono text-sm text-white/90">
+              <span className="opacity-50">#</span> Thinking...
+            </div>
+          )}
           {messages.map((message, i) => (
             <div
               key={i}
