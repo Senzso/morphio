@@ -52,16 +52,20 @@ export default function Terminal({ onClose }: TerminalProps) {
   })
 
   const connectPhantomWallet = useCallback(async () => {
-    if (typeof window.solana !== 'undefined') {
+    if (typeof window !== 'undefined' && window.solana && window.solana.isPhantom) {
       try {
         await window.solana.connect()
-        const publicKey = window.solana.publicKey.toString()
-        setIsWalletConnected(true)
-        toast({
-          title: "Wallet Connected",
-          description: `Phantom wallet connected: ${publicKey}`,
-        })
-        return `Wallet connected successfully. Public key: ${publicKey}`
+        const publicKey = window.solana.publicKey?.toString()
+        if (publicKey) {
+          setIsWalletConnected(true)
+          toast({
+            title: "Wallet Connected",
+            description: `Phantom wallet connected: ${publicKey}`,
+          })
+          return `Wallet connected successfully. Public key: ${publicKey}`
+        } else {
+          throw new Error('Failed to get public key')
+        }
       } catch (err) {
         console.error('Failed to connect wallet:', err)
         toast({
@@ -136,8 +140,8 @@ IMPORTANT: Save your private key securely. It will not be shown again.`
       if (commandResponse) {
         setMessages(prevMessages => [
           ...prevMessages,
-          { role: 'user', content: text },
-          { role: 'assistant', content: commandResponse }
+          { id: Date.now().toString(), role: 'user', content: text },
+          { id: (Date.now() + 1).toString(), role: 'assistant', content: commandResponse }
         ])
         setInput('')
       } else {
