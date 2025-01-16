@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { TerminalIcon, X, Send, Mic, Loader2, Wallet } from 'lucide-react'
+import { TerminalIcon, X, Send, Mic, Loader2 } from 'lucide-react'
 import { useChat } from 'ai/react'
 import Image from 'next/image'
 import { Button } from "@/components/ui/button"
@@ -37,53 +37,19 @@ export default function Terminal({ onClose }: TerminalProps) {
   const { toast } = useToast()
   const [isMinimized, setIsMinimized] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
-  const [isInputExpanded, setIsInputExpanded] = useState(false);
+  const [isInputExpanded, setIsInputExpanded] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
-  const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [showBundler, setShowBundler] = useState(false)
   const [showOnChain, setShowOnChain] = useState(false)
   const [showVolumeBot, setShowVolumeBot] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<any>(null)
+
   const { messages, input, handleInputChange, handleSubmit, setMessages, setInput, isLoading } = useChat({
     api: '/api/chat',
     initialMessages: [{ id: 'welcome', role: 'assistant', content: WELCOME_MESSAGE }]
   })
-
-  const connectPhantomWallet = useCallback(async () => {
-    if (typeof window !== 'undefined' && window.solana && window.solana.isPhantom) {
-      try {
-        await window.solana.connect()
-        const publicKey = window.solana.publicKey?.toString()
-        if (publicKey) {
-          setIsWalletConnected(true)
-          toast({
-            title: "Wallet Connected",
-            description: `Phantom wallet connected: ${publicKey}`,
-          })
-          return `Wallet connected successfully. Public key: ${publicKey}`
-        } else {
-          throw new Error('Failed to get public key')
-        }
-      } catch (err) {
-        console.error('Failed to connect wallet:', err)
-        toast({
-          title: "Connection Failed",
-          description: "Failed to connect Phantom wallet. Please try again.",
-          variant: "destructive",
-        })
-        return 'Failed to connect Phantom wallet. Please try again.'
-      }
-    } else {
-      toast({
-        title: "Wallet Not Found",
-        description: "Phantom wallet extension not found. Please install it and try again.",
-        variant: "destructive",
-      })
-      return 'Phantom wallet extension not found. Please install it and try again.'
-    }
-  }, [toast])
 
   const handleCommand = useCallback(async (command: string) => {
     const [cmd, ...args] = command.toLowerCase().trim().split(' ')
@@ -134,24 +100,22 @@ IMPORTANT: Save your private key securely. It will not be shown again.`
     }
   }, [])
 
-  const handleSend = useCallback(async (text: string) => {
-    if (text.trim()) {
-      const commandResponse = await handleCommand(text)
+  const handleSend = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (input.trim()) {
+      const commandResponse = await handleCommand(input)
       if (commandResponse) {
         setMessages(prevMessages => [
           ...prevMessages,
-          { id: Date.now().toString(), role: 'user', content: text },
+          { id: Date.now().toString(), role: 'user', content: input },
           { id: (Date.now() + 1).toString(), role: 'assistant', content: commandResponse }
         ])
         setInput('')
       } else {
-        // If it's not a command, send it to the chat API
-        handleSubmit(e => {
-          if (e) e.preventDefault();
-        })(text)
+        handleSubmit(e)
       }
     }
-  }, [handleCommand, setMessages, handleSubmit, setInput])
+  }, [input, handleCommand, setMessages, setInput, handleSubmit])
 
   const startRecording = useCallback(() => {
     if (!('webkitSpeechRecognition' in window)) {
@@ -174,25 +138,17 @@ IMPORTANT: Save your private key securely. It will not be shown again.`
 
     recognitionRef.current.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript
-      handleSend(transcript)
+      setInput(transcript)
     }
 
     recognitionRef.current.onerror = (event: any) => {
       console.error('Speech recognition error', event.error)
       setIsRecording(false)
-      if (event.error === 'not-allowed') {
-        toast({
-          title: "Microphone Access Denied",
-          description: "Please allow microphone access to use speech recognition.",
-          variant: "destructive",
-        })
-      } else {
-        toast({
-          title: "Speech Recognition Error",
-          description: "An error occurred while trying to recognize speech.",
-          variant: "destructive",
-        })
-      }
+      toast({
+        title: "Speech Recognition Error",
+        description: "An error occurred while trying to recognize speech.",
+        variant: "destructive",
+      })
     }
 
     recognitionRef.current.onend = () => {
@@ -200,7 +156,7 @@ IMPORTANT: Save your private key securely. It will not be shown again.`
     }
 
     recognitionRef.current.start()
-  }, [toast, handleSend])
+  }, [toast, setInput])
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
@@ -300,14 +256,14 @@ IMPORTANT: Save your private key securely. It will not be shown again.`
         </div>
 
         {/* Input Form */}
-        <form onSubmit={(e) => { e.preventDefault(); handleSend(input); }} className={`
+        <form onSubmit={handleSend} className={`
           p-6 border-t border-white/10 bg-black/50
           transition-all duration-500
           ${isMinimized ? 'opacity-0 pointer-events-none' : 'opacity-100'}
         `}>
           <div className="flex items-center gap-2 relative">
             <span className="text-[#e8f9ff] font-mono absolute left-2 top-4">{'>'}</span>
-            <input
+            <Input
               ref={inputRef}
               value={input}
               onChange={handleInputChange}
