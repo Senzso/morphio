@@ -94,7 +94,7 @@ Public Key: ${publicKey}
 Private Key: ${privateKey}
 IMPORTANT: Save your private key securely. It will not be shown again.`
       case '!socials':
-        return 'Our X is: https://x.com/Morpholution'
+        return 'Our X is: https://x.com/morphsoIution'
       default:
         return null
     }
