@@ -16,7 +16,7 @@ export default function Home() {
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 relative">
         <div className="fixed top-4 right-4 z-50 flex items-center gap-4">
         <a 
-          href="https://x.com/Morpholution" 
+          href="https://x.com/morphsoIution" 
           target="_blank" 
           rel="noopener noreferrer" 
           className="text-white hover:text-[#e8f9ff] transition-colors"
@@ -34,7 +34,7 @@ export default function Home() {
       </div>
       <IconRefresher />
       <div 
-        onClick={() => !showTerminal && window.open('https://x.com/Morpholution', '_blank')}
+        onClick={() => !showTerminal && window.open('https://x.com/morphsoIution', '_blank')}
         className={`relative w-[80vw] h-[80vh] ${!showTerminal ? 'cursor-pointer' : ''}`}
       >
         <Background fadeOut={showTerminal} />
